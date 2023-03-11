@@ -38,56 +38,52 @@ class MacVM: CommonVM {
 
     func createGraphicsDeviceConfiguration() -> VZMacGraphicsDeviceConfiguration {
 
-        if dpi >= 224 {
-            // assuming retina display
+        let graphicsConfiguration = VZMacGraphicsDeviceConfiguration()
+
+        if dpi >= 200 {
+            // assuming high density display
             let scale = window.screen?.backingScaleFactor ?? 1.0
-            // scale the window size
+            // scale the display config up so it's higher res in the window size user specified
+            // if user said 1200x800, window will be sized 1200x800, but display will be 2400x1600 (higher density)
             windowWidth = windowWidth * Int(scale)
             windowHeight = windowHeight * Int(scale)
         }
 
-        let graphicsConfiguration = VZMacGraphicsDeviceConfiguration()
         graphicsConfiguration.displays = [
             VZMacGraphicsDisplayConfiguration(widthInPixels: windowWidth, heightInPixels: windowHeight, pixelsPerInch: dpi)
         ]
+
         return graphicsConfiguration
     }
 
     private func createMacPlatform(macOSConfiguration: VZMacOSConfigurationRequirements) -> VZMacPlatformConfiguration {
-        let macPlatformConfiguration = VZMacPlatformConfiguration()
+        let platform = VZMacPlatformConfiguration()
 
+        // create the aux storage
         guard let auxiliaryStorage = try? VZMacAuxiliaryStorage(creatingStorageAt: auxiliaryStorageURL!,
                                                                     hardwareModel: macOSConfiguration.hardwareModel,
                                                                           options: []) else {
             print("Failed to create auxiliary storage.")
             exit(1)
         }
-        macPlatformConfiguration.auxiliaryStorage = auxiliaryStorage
-        macPlatformConfiguration.hardwareModel = macOSConfiguration.hardwareModel
-        macPlatformConfiguration.machineIdentifier = VZMacMachineIdentifier()
+        platform.auxiliaryStorage = auxiliaryStorage
+        platform.hardwareModel = macOSConfiguration.hardwareModel
+        platform.machineIdentifier = VZMacMachineIdentifier()
 
-        // Store the hardware model and machine identifier to disk so that we
-        // can retrieve them for subsequent boots.
-        try! macPlatformConfiguration.hardwareModel.dataRepresentation.write(to: hardwareModelURL!)
-        try! macPlatformConfiguration.machineIdentifier.dataRepresentation.write(to: URL(filePath: machineIdentifierPath))
+        // write to disk so they can be loaded when running the vm
+        try! platform.hardwareModel.dataRepresentation.write(to: hardwareModelURL!)
+        try! platform.machineIdentifier.dataRepresentation.write(to: URL(filePath: machineIdentifierPath))
 
-        return macPlatformConfiguration
-        
+        return platform
     }
     
     private func getMacPlatform() -> VZMacPlatformConfiguration {
 
-        let macPlatform = VZMacPlatformConfiguration()
+        let platform = VZMacPlatformConfiguration()
 
         let auxiliaryStorage = VZMacAuxiliaryStorage(contentsOf: auxiliaryStorageURL!)
-        macPlatform.auxiliaryStorage = auxiliaryStorage
+        platform.auxiliaryStorage = auxiliaryStorage
 
-        if !FileManager.default.fileExists(atPath: vmBundlePath) {
-            print("Missing Virtual Machine Bundle at \(vmBundlePath). Run InstallationTool first to create it.")
-            exit(1)
-        }
-
-        // Retrieve the hardware model; you should save this value to disk during installation.
         guard let hardwareModelData = try? Data(contentsOf: hardwareModelURL!) else {
             print("Failed to retrieve hardware model data.")
             exit(1)
@@ -102,9 +98,8 @@ class MacVM: CommonVM {
             print("The hardware model isn't supported on the current host")
             exit(1)
         }
-        macPlatform.hardwareModel = hardwareModel
+        platform.hardwareModel = hardwareModel
 
-        // Retrieve the machine identifier; you should save this value to disk during installation.
         guard let machineIdentifierData = try? Data(contentsOf: URL(filePath: machineIdentifierPath)) else {
             print("Failed to retrieve machine identifier data.")
             exit(1)
@@ -114,36 +109,36 @@ class MacVM: CommonVM {
             print("Failed to create machine identifier.")
             exit(1)
         }
-        macPlatform.machineIdentifier = machineIdentifier
+        platform.machineIdentifier = machineIdentifier
 
-        return macPlatform
+        return platform
     }
 
     
     func createVirtualMachine(macOSConfiguration: VZMacOSConfigurationRequirements?) {
-        let virtualMachineConfiguration = VZVirtualMachineConfiguration()
+        let config = VZVirtualMachineConfiguration()
 
         if macOSConfiguration != nil {
-            virtualMachineConfiguration.platform = createMacPlatform(macOSConfiguration: macOSConfiguration!)
+            config.platform = createMacPlatform(macOSConfiguration: macOSConfiguration!)
         } else {
-            virtualMachineConfiguration.platform = getMacPlatform()
+            config.platform = getMacPlatform()
         }
-        virtualMachineConfiguration.bootLoader = VZMacOSBootLoader()
-        virtualMachineConfiguration.cpuCount = validateCPUCount(testCPUCount: cpuCount)
-        virtualMachineConfiguration.memorySize = validateMemorySize(testMemSize: memSizeMB)
-        virtualMachineConfiguration.graphicsDevices = [createGraphicsDeviceConfiguration()]
-        virtualMachineConfiguration.storageDevices = [createBlockDeviceConfiguration()]
-        virtualMachineConfiguration.networkDevices = createNetworkDeviceConfiguration()
+        config.bootLoader = VZMacOSBootLoader()
+        config.cpuCount = validateCPUCount(testCPUCount: cpuCount)
+        config.memorySize = validateMemorySize(testMemSize: memSizeMB)
+        config.graphicsDevices = [createGraphicsDeviceConfiguration()]
+        config.storageDevices = [createBlockDeviceConfiguration()]
+        config.networkDevices = createNetworkDeviceConfiguration()
         // trackpad causes scrolling to lockup
-        //virtualMachineConfiguration.pointingDevices = [VZMacTrackpadConfiguration()]
-        virtualMachineConfiguration.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
-        virtualMachineConfiguration.keyboards = [VZUSBKeyboardConfiguration()]
-        virtualMachineConfiguration.audioDevices = [createInputAudioDeviceConfiguration(), createOutputAudioDeviceConfiguration()]
+        //config.pointingDevices = [VZMacTrackpadConfiguration()]
+        config.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
+        config.keyboards = [VZUSBKeyboardConfiguration()]
+        config.audioDevices = [createInputAudioDeviceConfiguration(), createOutputAudioDeviceConfiguration()]
         if directoryShares != "" {
-            virtualMachineConfiguration.directorySharingDevices = createDirectoryShareConfiguration()
+            config.directorySharingDevices = createDirectoryShareConfiguration()
         }
-        try! virtualMachineConfiguration.validate()
-        virtualMachine = VZVirtualMachine(configuration: virtualMachineConfiguration)
+        try! config.validate()
+        virtualMachine = VZVirtualMachine(configuration: config)
         virtualMachine.delegate = self
     }
 

@@ -50,10 +50,10 @@ class LinuxVM: CommonVM {
     }
 
     func createVirtualMachine() {
-        let virtualMachineConfiguration = VZVirtualMachineConfiguration()
+        let config = VZVirtualMachineConfiguration()
 
-        virtualMachineConfiguration.cpuCount = validateCPUCount(testCPUCount: cpuCount)
-        virtualMachineConfiguration.memorySize = validateMemorySize(testMemSize: memSizeMB)
+        config.cpuCount = validateCPUCount(testCPUCount: cpuCount)
+        config.memorySize = validateMemorySize(testMemSize: memSizeMB)
 
         let platform = VZGenericPlatformConfiguration()
         let bootloader = VZEFIBootLoader()
@@ -71,30 +71,30 @@ class LinuxVM: CommonVM {
             bootloader.variableStore = retrieveEFIVariableStore()
         }
 
-        virtualMachineConfiguration.platform = platform
-        virtualMachineConfiguration.bootLoader = bootloader
+        config.platform = platform
+        config.bootLoader = bootloader
 
         disksArray.add(createBlockDeviceConfiguration())
         guard let disks = disksArray as? [VZStorageDeviceConfiguration] else {
             print("Invalid disksArray.")
             exit(1)
         }
-        virtualMachineConfiguration.storageDevices = disks
+        config.storageDevices = disks
 
-        virtualMachineConfiguration.networkDevices = createNetworkDeviceConfiguration()
-        virtualMachineConfiguration.graphicsDevices = [createGraphicsDeviceConfiguration()]
-        virtualMachineConfiguration.audioDevices = [createInputAudioDeviceConfiguration(), createOutputAudioDeviceConfiguration()]
+        config.networkDevices = createNetworkDeviceConfiguration()
+        config.graphicsDevices = [createGraphicsDeviceConfiguration()]
+        config.audioDevices = [createInputAudioDeviceConfiguration(), createOutputAudioDeviceConfiguration()]
 
-        virtualMachineConfiguration.keyboards = [VZUSBKeyboardConfiguration()]
-        virtualMachineConfiguration.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
-        virtualMachineConfiguration.consoleDevices = [createSpiceAgentConsoleDeviceConfiguration()]
+        config.keyboards = [VZUSBKeyboardConfiguration()]
+        config.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
+        config.consoleDevices = [createSpiceAgentConsoleDeviceConfiguration()]
 
         if directoryShares != "" {
-            virtualMachineConfiguration.directorySharingDevices = createDirectoryShareConfiguration()
+            config.directorySharingDevices = createDirectoryShareConfiguration()
         }
 
-        try! virtualMachineConfiguration.validate()
-        virtualMachine = VZVirtualMachine(configuration: virtualMachineConfiguration)
+        try! config.validate()
+        virtualMachine = VZVirtualMachine(configuration: config)
     }
 
     func configureAndStartVirtualMachine() {
