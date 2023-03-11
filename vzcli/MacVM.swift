@@ -33,21 +33,19 @@ class MacVM: CommonVM {
         dpi = Int((resolution.split(separator: "x")[2] as NSString).intValue)
         auxiliaryStorageURL = URL(fileURLWithPath: vmBundlePath + "AuxiliaryStorage")
         hardwareModelURL = URL(fileURLWithPath: vmBundlePath + "HardwareModel")
-        
-        if dpi >= 226 {
-            // not sure why I'm doing this, but it looks sharper
-            let scale = window.screen?.backingScaleFactor ?? 1.0
-            windowWidth = windowWidth * 2
-            windowHeight = windowHeight * 2
-            let size = CGSize(width: CGFloat(windowWidth) / scale, height: CGFloat(windowHeight) / scale)
-            window = NSWindow(contentRect: CGRect(origin: window.frame.origin, size: size),
-                              styleMask: [.titled, .closable, .miniaturizable],
-                              backing: .buffered, defer: false)
-        }
 
     }
 
     func createGraphicsDeviceConfiguration() -> VZMacGraphicsDeviceConfiguration {
+
+        if dpi >= 224 {
+            // assuming retina display
+            let scale = window.screen?.backingScaleFactor ?? 1.0
+            // scale the window size
+            windowWidth = windowWidth * Int(scale)
+            windowHeight = windowHeight * Int(scale)
+        }
+
         let graphicsConfiguration = VZMacGraphicsDeviceConfiguration()
         graphicsConfiguration.displays = [
             VZMacGraphicsDisplayConfiguration(widthInPixels: windowWidth, heightInPixels: windowHeight, pixelsPerInch: dpi)

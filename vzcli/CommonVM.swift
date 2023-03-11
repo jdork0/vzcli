@@ -159,6 +159,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return VZEFIVariableStore(url: URL(fileURLWithPath: efiVariableStorePath))
     }
 
+    // attach the installer iso to install linux vms
     func createUSBMassStorageDeviceConfiguration() -> VZUSBMassStorageDeviceConfiguration {
         guard let installerISOPath = URL(string: "file://" + initImg) else {
             print("Invalid initialization image.")
@@ -171,6 +172,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return VZUSBMassStorageDeviceConfiguration(attachment: intallerDiskAttachment)
     }
 
+    // creates all the directory shares
     func createDirectoryShareConfiguration() -> [VZVirtioFileSystemDeviceConfiguration] {
         
         var allShares: [VZVirtioFileSystemDeviceConfiguration] = []
@@ -178,7 +180,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         do {
             // share string is formatted as tag1:directory:[rw|ro],tag2:directory2:[rw|ro], etc...
             // a special value of rosetta enables rosetta mount
-            for share in directoryShares.split(separator: ",") {
+            for share in directoryShares.split(separator: "+") {
                 if share == "rosetta" {
                     let rosettaDirectoryShare = try VZLinuxRosettaDirectoryShare()
                     let fileSystemDevice = VZVirtioFileSystemDeviceConfiguration(tag: "rosetta")
@@ -208,31 +210,36 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     
     func createNetworkDeviceConfiguration() -> [VZVirtioNetworkDeviceConfiguration] {
 
+        // array of network devices to add
         var netDevices: [VZVirtioNetworkDeviceConfiguration] = []
-                
-        for devConf in netConf.split(separator: ",") {
+
+        // netConf formatted as type:opts,type:opts,...
+        for devConf in netConf.split(separator: "+") {
             
+            // the current device to configure
             let networkDevice = VZVirtioNetworkDeviceConfiguration()
 
-            // break up the netConf string into type:opts...
+            // break up the netConf string into type:opts
             var netType = ""
             var netOpts = ""
-            var hasOpts = false
             if devConf.contains(":") {
-                hasOpts = true
-            }
-            if hasOpts {
+                // has options, split them out
                 let index = devConf.firstIndex(of: ":")!
                 netType = String(devConf[..<index])
                 let nextIndex = devConf.index(index, offsetBy: 1)
                 netOpts = String(devConf[nextIndex...])
             } else {
+                // no options, just a type
                 netType = String(devConf)
             }
             
+            // handle the different types (user, nat, bridged)
             switch netType {
             case "user":
-                // create a socketpair for gvisor
+                // socket based user networking provided by usernet (go frontend to gvisor)
+                // netOpts will be list of port forwards
+                
+                // create a socketpair
                 let socket_pair = Array<Int32>(unsafeUninitializedCapacity: 2) { buffer, initializedCount in
                     guard Darwin.socketpair(AF_UNIX, SOCK_DGRAM, 0, buffer.baseAddress) == 0 else {
                         assertionFailure(String(cString: Darwin.strerror(errno)!))
@@ -246,27 +253,29 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
                 var sendSize = Int32(4*1024*1024)
                 var recvSize = Int32(1*1024*1024)
                 let socklen = socklen_t(sendSize)
-                // set the server
+                // set the "server side" (socket passed to usernet)
                 Darwin.setsockopt(socket_pair[0], SOL_SOCKET, SO_SNDBUF, &sendSize, socklen)
                 Darwin.setsockopt(socket_pair[0], SOL_SOCKET, SO_RCVBUF, &recvSize, socklen)
-                // set client side
+                // set "client side" (the vm)
                 Darwin.setsockopt(socket_pair[1], SOL_SOCKET, SO_SNDBUF, &recvSize, socklen)
                 Darwin.setsockopt(socket_pair[1], SOL_SOCKET, SO_RCVBUF, &sendSize, socklen)
 
-                // start gvisor based user network
+                // start user network, passing in first socket of pair and the port forwarding options
                 DispatchQueue.main.async {
                     UsernetStartUserNet(socket_pair[0],netOpts)
                 }
 
+                // connect second socket as vm device
                 let socketDev = VZFileHandleNetworkDeviceAttachment(fileHandle: FileHandle(fileDescriptor: socket_pair[1]))
                 networkDevice.attachment = socketDev
 
             case "nat":
+                // vz nat networking, no options
                 let natDevice = VZNATNetworkDeviceAttachment()
                 networkDevice.attachment = natDevice
 
             case "bridged":
-                // netOpts for bridged should be interface:mac
+                // netOpts for bridged should be interface:mac (en0:aa:bb:cc:dd:ee:ff)
                 if !netOpts.contains(":") {
                     print("Invalid bridged config: " + netOpts)
                     exit(1)
@@ -274,23 +283,23 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
                 
                 //  split out the interface:mac
                 let index = netOpts.firstIndex(of: ":")!
-                let bridgeInterface = String(netOpts[..<index])
+                let phyItfName = String(netOpts[..<index])
                 let nextIndex = netOpts.index(index, offsetBy: 1)
                 let macAddress = String(netOpts[nextIndex...])
 
                 // check that the interface exists
                 var found = false
-                var foundInterface: VZBridgedNetworkInterface?
+                var bridgeItf: VZBridgedNetworkInterface?
                 for interface in VZBridgedNetworkInterface.networkInterfaces {
-                    if interface.identifier == bridgeInterface {
-                        foundInterface = interface
+                    if interface.identifier == phyItfName {
+                        bridgeItf = interface
                         found = true
                         break
                     }
                 }
                 if found {
-                    // attach the found device
-                    let attachment = VZBridgedNetworkDeviceAttachment(interface: foundInterface!)
+                    // device was found, attach it
+                    let attachment = VZBridgedNetworkDeviceAttachment(interface: bridgeItf!)
                     networkDevice.attachment = attachment
                     // validate the mac address is ok
                     let vzMac = VZMACAddress(string: macAddress)
@@ -302,17 +311,19 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
                         exit(1)
                     }
                 } else {
-                    print("Invalid bridged configuration: " + devConf)
+                    print("Bridge interface not found: " + phyItfName)
                     exit(1)
                 }
 
             default:
+                // not a valid type (user, nat, bridged)
                 print("Invalid network type: " + devConf)
                 exit(1)
             }
             // add the device to the list
             netDevices.append(networkDevice)
         }
+        // return the list of network devices
         return netDevices
     }
 
@@ -370,7 +381,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
 //        networkDevice.attachment = socketDev
 //        return networkDevice
 
-
+    // create the input audio device
     func createInputAudioDeviceConfiguration() -> VZVirtioSoundDeviceConfiguration {
         let inputAudioDevice = VZVirtioSoundDeviceConfiguration()
 
@@ -381,6 +392,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return inputAudioDevice
     }
 
+    // create the output audio device
     func createOutputAudioDeviceConfiguration() -> VZVirtioSoundDeviceConfiguration {
         let outputAudioDevice = VZVirtioSoundDeviceConfiguration()
 
@@ -391,17 +403,20 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return outputAudioDevice
     }
 
+    // starts the virtual machine
     func startVirtualMachine(captureSystemKeys: Bool)
     {
         DispatchQueue.main.async {
+            // display the window and connect to vm if not headless
             if self.enableUI {
-                //self.window.standardWindowButton(NSWindow.ButtonType.closeButton)!.isHidden = true
-                //self.window.standardWindowButton(NSWindow.ButtonType.zoomButton)!.isHidden = true
                 // open a window with the GUI
                 self.window.orderFrontRegardless()
+                // get the view of virtualmachine
                 let virtualMachineView = VZVirtualMachineView()
                 virtualMachineView.virtualMachine = self.virtualMachine
+                // capture system keys is true for macOS, false for Linux
                 virtualMachineView.capturesSystemKeys = captureSystemKeys
+                // set the window view to the vm view
                 self.window.contentView = virtualMachineView
                 // set it so vm handles input without having to click window
                 self.window.makeFirstResponder(virtualMachineView)
@@ -409,7 +424,9 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
                 // bring the window to front
                 NSApp.activate(ignoringOtherApps: true)
             }
+            // handle delegate calls
             self.virtualMachine.delegate = self
+            // start the vm
             self.virtualMachine.start(completionHandler: { (result) in
                 switch result {
                 case let .failure(error):
@@ -422,20 +439,25 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         }
 
     }
+    
+    // exit if window closed
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return true
     }
 
+    // virtual machine stopped with error
     func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
         print("Virtual machine did stop with error: \(error.localizedDescription)")
         exit(1)
     }
 
+    // virtual machine stopped
     func guestDidStop(_ virtualMachine: VZVirtualMachine) {
         print("Guest did stop virtual machine.")
         exit(0)
     }
 
+    // net error
     func virtualMachine(_ virtualMachine: VZVirtualMachine, networkDevice: VZNetworkDevice, attachmentWasDisconnectedWithError error: Error) {
         print("Network attachment was disconnected with error: \(error.localizedDescription)")
     }

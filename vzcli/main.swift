@@ -20,18 +20,18 @@ import AppKit
 import ArgumentParser
 
 struct vzcli: ParsableCommand {
-    @Option() var cpus = 4
-    @Option() var mem = 8192
-    @Option() var resolution = "1280x800x226"
-    @Option() var net = "user"
-    @Option() var sharing = ""
-    @Flag() var headless = false
-    @Option() var initLinux = ""
-    @Flag() var initMacos = false
-    @Option() var initMacosIPSW = ""
-    @Option() var initDiskSize = UInt64(64)
-    @Flag() var generateMac = false
-    @Argument() var vmPath: String
+    @Option(help: "Number of cpus.") var cpus = 4
+    @Option(help: "RAM in MB.") var mem = 8192
+    @Option(help: "Display resolution [width x height x dpi] (dpi macOS only)") var resolution = "1280x800x224"
+    @Option(help: "List of type:options\n  user:[host:<hostport>:<guestport>,<hostport2>:<guestport2>,...]\n  bridged:interface:mac\n  nat\nexample: --net user:2222,22+bridged:en0:2e:1c:46:7a:f8:68\n") var net = "user"
+    @Option(help: "List of directories exposed to guest by virtiofs\n  rosetta (linux rosetta support)\n  tag:directory:ro|rw\nexample: --virtiofs rosetta+home:/Users/test/test:rw\n") var virtiofs = ""
+    @Flag(help: "No GUI") var headless = false
+    @Option(help: "Path to Linux install iso") var initLinux = ""
+    @Flag(help: "Create a new macOS VM") var initMacos = false
+    @Option(help: "Use specified restore.ipsw instead of downloading latest.") var initMacosIPSW = ""
+    @Option(help: "Disk size in GB.") var initDiskSize = UInt64(64)
+    @Flag(help: "Generate a MAC Address to use with bridged networking.") var generateMac = false
+    @Argument(help: "Path to VM directory") var vmPath: String
 
     func run() {
 
@@ -48,21 +48,21 @@ struct vzcli: ParsableCommand {
         }
         // launch a linux vm
         if initLinux != "" || FileManager.default.fileExists(atPath: vmPath + "/" + linuxMarker) {
-            let delegate = LinuxVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmpath: vmPath, netconf: net, sharing: sharing, initimg: initLinux, initDiskSize: initDiskSize)
+            let delegate = LinuxVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmpath: vmPath, netconf: net, sharing: virtiofs, initimg: initLinux, initDiskSize: initDiskSize)
             app.delegate = delegate
             app.run()
             return
         }
         // create a new macOS vm
         if initMacos {
-            let delegate = CreateMacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmpath: vmPath, netconf: net, sharing: sharing, initimg: initMacosIPSW, initDiskSize: initDiskSize)
+            let delegate = CreateMacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmpath: vmPath, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize)
             app.delegate = delegate
             app.run()
             return
         }
         // launch an existing macOS vm
         if FileManager.default.fileExists(atPath: vmPath + "/" + macOSMarker) {
-            let delegate = MacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmpath: vmPath, netconf: net, sharing: sharing, initimg: initMacosIPSW, initDiskSize: initDiskSize)
+            let delegate = MacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmpath: vmPath, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize)
             app.delegate = delegate
             app.run()
             return

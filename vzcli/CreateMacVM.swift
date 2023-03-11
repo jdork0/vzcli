@@ -29,12 +29,17 @@ class CreateMacVM: MacVM {
     }
     
     override func applicationDidFinishLaunching(_ aNotification: Notification) {
+        // create the vm directory
         createVMBundle()
+        // create an empty disk image
         createMainDiskImage()
+        // install macOS from restore image or download latest
         if initImg != "" {
+            // install from given image
             restoreImageURL = URL(fileURLWithPath: initImg)
             installMacOS(ipswURL: restoreImageURL!)
         } else {
+            // download latest image and install from that
             download {
                 self.restoreImageURL = URL(fileURLWithPath: self.vmBundlePath + "RestoreImage.ipsw")
                 self.installMacOS(ipswURL: self.restoreImageURL!)
