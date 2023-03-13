@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		82400BDE29BAB5F90069C331 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 82400BDD29BAB5F90069C331 /* Assets.xcassets */; };
+		821CC91829BF53BE00E9452E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 821CC91729BF53BE00E9452E /* Assets.xcassets */; };
 		82400BE929BAB8920069C331 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82400BE829BAB8910069C331 /* main.swift */; };
 		82400BEB29BAB89B0069C331 /* LinuxVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82400BEA29BAB89B0069C331 /* LinuxVM.swift */; };
 		82400BEF29BAB8A20069C331 /* MacVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82400BEC29BAB8A20069C331 /* MacVM.swift */; };
@@ -18,8 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		821CC91729BF53BE00E9452E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		82400BD629BAB5F80069C331 /* vzcli.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = vzcli.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		82400BDD29BAB5F90069C331 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		82400BE229BAB5F90069C331 /* vzcli.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = vzcli.entitlements; sourceTree = "<group>"; };
 		82400BE829BAB8910069C331 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		82400BEA29BAB89B0069C331 /* LinuxVM.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinuxVM.swift; sourceTree = "<group>"; };
@@ -61,7 +61,7 @@
 		82400BD829BAB5F80069C331 /* vzcli */ = {
 			isa = PBXGroup;
 			children = (
-				82400BDD29BAB5F90069C331 /* Assets.xcassets */,
+				821CC91729BF53BE00E9452E /* Assets.xcassets */,
 				82400BE229BAB5F90069C331 /* vzcli.entitlements */,
 				82400BE829BAB8910069C331 /* main.swift */,
 				82400BEA29BAB89B0069C331 /* LinuxVM.swift */,
@@ -137,7 +137,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				82400BDE29BAB5F90069C331 /* Assets.xcassets in Resources */,
+				821CC91829BF53BE00E9452E /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -277,7 +277,9 @@
 			buildSettings = {
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				ASSETCATALOG_COMPILER_SKIP_APP_STORE_DEPLOYMENT = YES;
 				CODE_SIGN_ENTITLEMENTS = vzcli/vzcli.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
@@ -311,7 +313,9 @@
 			buildSettings = {
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				ASSETCATALOG_COMPILER_SKIP_APP_STORE_DEPLOYMENT = YES;
 				CODE_SIGN_ENTITLEMENTS = vzcli/vzcli.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
