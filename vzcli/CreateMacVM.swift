@@ -48,7 +48,7 @@ class CreateMacVM: MacVM {
     }
 
     public func download(completionHandler: @escaping () -> Void) {
-        NSLog("Attempting to download latest available restore image.")
+        print("Attempting to download latest available restore image.")
         VZMacOSRestoreImage.fetchLatestSupported { [self](result: Result<VZMacOSRestoreImage, Error>) in
             switch result {
                 case let .failure(error):
@@ -71,7 +71,7 @@ class CreateMacVM: MacVM {
                 print("Failed to move downloaded restore image to \(self.restoreImageURL!).")
                 exit(1)
             }
-            NSLog(" done.")
+            print(" done.")
             completionHandler()
         }
 
@@ -80,14 +80,14 @@ class CreateMacVM: MacVM {
             let floorValue = Int(floor(change.newValue! * 100))
             if downloadProgress != floorValue {
                 downloadProgress = floorValue
-                NSLog("Restore image download progress: " + String(floorValue) + "%%")
+                print("Restore image download progress: " + String(floorValue) + "%%")
             }
         }
         downloadTask.resume()
     }
 
     public func installMacOS(ipswURL: URL) {
-        NSLog("Attempting to install from IPSW at \(ipswURL).")
+        print("Attempting to install from IPSW at \(ipswURL).")
         VZMacOSRestoreImage.load(from: ipswURL, completionHandler: { [self](result: Result<VZMacOSRestoreImage, Error>) in
             switch result {
                 case let .failure(error):
@@ -120,7 +120,7 @@ class CreateMacVM: MacVM {
     private func startInstallation(restoreImageURL: URL) {
         let installer = VZMacOSInstaller(virtualMachine: virtualMachine, restoringFromImageAt: restoreImageURL)
 
-        NSLog("Starting installation.")
+        print("Starting installation.")
         installer.install(completionHandler: { (result: Result<Void, Error>) in
             if case let .failure(error) = result {
                 print(error.localizedDescription)

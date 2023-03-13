@@ -54,7 +54,7 @@ struct vzcli: ParsableCommand {
             return
         }
         // create a new macOS vm
-        if initMacos {
+        if initMacos || initMacosIPSW != "" {
             let delegate = CreateMacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmpath: vmPath, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize)
             app.delegate = delegate
             app.run()
