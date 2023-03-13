@@ -1,7 +1,9 @@
 # vzcli
 Command line app for running arm64 Linux / macOS Virtual Machines using Apple Virtualization Framework.
 
-The purpose of this project was to provide a quick way to create/launch Linux of macOS virtual machines using the virtualization framework available in macOS 13 Ventura.
+The purpose of this project was to provide a quick command line method to create/launch Linux or macOS virtual machines using the virtualization framework available in macOS 13 Ventura.
+
+**Only arm64 supported.** 
 
 # Features
 
@@ -67,7 +69,7 @@ NOTE: If the ```--resolution``` flag contains a DPI >= 200 the display will be s
 
 # Usage notes
 
-Apple signing requires this is distributed in as an app bundle.  I use an alias to simplify accessing the command line app.
+Apple signing requires this be distributed as an app bundle.  I use an alias to simplify accessing the command line app.
 ```
 $ alias vzcli='/Applications/vzcli.app/Contents/MacOS/vzcli'
 $ vzcli ...
