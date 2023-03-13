@@ -76,7 +76,7 @@ $ vzcli ...
 ```
 Personally, I use screen aliases to launch headless Linux VMs in the background:
 ```
-$ alias ubuntu='screen -d -m -S rocky9vm /Applications/vzcli.app/Contents/MacOS/vzcli --net user:2222:22 --headless --virtiofs rosetta,home:/Users/myuser:rw ~/vm/ubuntu'
+$ alias ubuntu='screen -d -m -S ubuntu /Applications/vzcli.app/Contents/MacOS/vzcli --net user:2222:22 --headless --virtiofs rosetta,home:/Users/myuser:rw ~/vm/ubuntu'
 $ ubuntu
 $ ssh -p 2222 localhost
 ```
