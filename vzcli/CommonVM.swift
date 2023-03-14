@@ -270,8 +270,20 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
                 networkDevice.attachment = socketDev
 
             case "nat":
-                // vz nat networking, no options
+                // vz nat networking, netOpts is a macaddress
+                if netOpts == "" {
+                    print("Must specify MAC Address for nat.")
+                    exit(1)
+                }
                 let natDevice = VZNATNetworkDeviceAttachment()
+                let vzMac = VZMACAddress(string: netOpts)
+                if vzMac != nil {
+                    // set it on device
+                    networkDevice.macAddress = vzMac!
+                } else {
+                    print("Invalid mac address: " + netOpts)
+                    exit(1)
+                }
                 networkDevice.attachment = natDevice
 
             case "bridged":

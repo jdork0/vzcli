@@ -11,9 +11,11 @@ The purpose of this project was to provide a quick command line method to create
 
 - _user_: a user networking stack based on https://github.com/containers/gvisor-tap-vsock.  Uses VZFileHandleNetworkDeviceAttachment for socket based networking where the VM is only reachable through port forwards.  This is the default networking stack.  See the usage for port forwarding examples.
 
-- _nat_: Apple's NAT network sharing.  macOS will create a bridge100 interface and the VM will get an address on the 192.168.205.0/24 subnet.
+- _nat_: Apple's NAT network sharing.  macOS will create a bridge100 interface and the VM will get an address on the 192.168.205.0/24 subnet. NAT networking must specify a MAC address for the guest interface.
 
-- _bridged_: Bridged networking.  This works on the signed release binaries, but will not work if you build the code yourself without getting the com.apple.vm.networking entitlement from Apple.  Bridged networking must specify the interface to bridge and the MAC address that will be assigned to the vm.  The ```'vzcli --generate-mac .'``` command can be used generate a random MAC address.
+- _bridged_: Bridged networking.  This works on the signed release binaries, but will not work if you build the code yourself without getting the com.apple.vm.networking entitlement from Apple.  Bridged networking must specify the interface to bridge and the MAC address that will be assigned to the vm.
+
+The ```'vzcli --generate-mac .'``` command can be used generate a random MAC address for use with NAT or Bridged networking.
 
 Multiple network interfaces can be configured on the VM by chaining the configurations with the ```+``` character.  See usage below.
 
@@ -97,7 +99,7 @@ OPTIONS:
   --net <net>             List of type:options
                             user:[host:<hostport>:<guestport>,<hostport2>:<guestport2>,...]
                             bridged:interface:mac
-                            nat
+                            nat:mac
                           example: --net user:2222,22+bridged:en0:2e:1c:46:7a:f8:68
                            (default: user)
   --virtiofs <virtiofs>   List of directories exposed to guest by virtiofs
