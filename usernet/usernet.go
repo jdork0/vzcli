@@ -57,11 +57,9 @@ func StartUserNet(sockFD int32, portForwards string) {
 		GatewayVirtualIPs: []string{"172.16.10.254"},
 		Protocol:          types.BessProtocol,
 	}
-	// Forwards: map[string]string{
-	// 	fmt.Sprintf("127.0.0.1:%d", sshPort): "172.16.10.2:22",
-	// },
 
-	// shush go
+	// try to turn off golang logging
+	// some still sneaking through
 	null, _ := os.Open(os.DevNull)
 	os.Stdout = null
 	os.Stderr = null
@@ -77,13 +75,14 @@ func StartUserNet(sockFD int32, portForwards string) {
 	// create a background context
 	ctx := context.Background()
 
-	// get a file connection to the fd pass in
+	// get a file connection to the socket file descriptor
 	file := os.NewFile(uintptr(sockFD), "server")
 	conn, err := net.FileConn(file)
 	if err != nil {
 		fmt.Printf("err: %q\n", err)
 	}
 
+	// connect the socket to the virtualnetwork
 	groupErrs, ctx := errgroup.WithContext(ctx)
 	groupErrs.Go(func() error {
 		return vn.AcceptBess(ctx, conn)
@@ -94,5 +93,4 @@ func StartUserNet(sockFD int32, portForwards string) {
 			fmt.Printf("virtual network error: %q\n", err)
 		}
 	}()
-	// return nil
 }

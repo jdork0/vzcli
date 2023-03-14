@@ -267,6 +267,10 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
 
                 // connect second socket as vm device
                 let socketDev = VZFileHandleNetworkDeviceAttachment(fileHandle: FileHandle(fileDescriptor: socket_pair[1]))
+                // hard code the mac address on this connection
+                // should probably block two "user" type interfaces on same VM
+                let vzMac = VZMACAddress(string: "5a:ca:b5:c7:1b:e7")!
+                networkDevice.macAddress = vzMac
                 networkDevice.attachment = socketDev
 
             case "nat":
