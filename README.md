@@ -37,11 +37,12 @@ $ sudo mount_virtiofs home /path/to/mnt/dir
 ### *Linux*:
 ```
 # launch existing Linux vm
-$ vzcli --virtiofs home:/Users/test:ro ~/vm/ubuntu/
+$ vzcli --virtiofs rosetta+home:/Users/test:ro ~/vm/ubuntu/
 
 # inside Linux
 $ mkdir /path/to/mnt/dir
-$ sudo mount -t virtiofs home /path/to/mnt/dir
+$ sudo mount -t virtiofs home /path/to/mnt/home
+$ sudo mount -t virtiofs rosetta /path/to/mnt/rosetta
 ```
 # Creating Virtual Machines
 ## Linux
