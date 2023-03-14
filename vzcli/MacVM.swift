@@ -13,6 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+// See LICENSE file
+//
 
 import Foundation
 import AppKit
@@ -20,42 +22,41 @@ import Virtualization
 
 class MacVM: CommonVM {
     
-    var dpi = 226
+    var dpi = 224
     var auxiliaryStorageURL: URL?
     var hardwareModelURL: URL?
     
-    override init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmpath: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
+    override init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
         
-        super.init(cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmpath: vmpath, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
+        super.init(cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmdir: vmdir, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
         
         windowWidth = Int((resolution.split(separator: "x")[0] as NSString).intValue)
         windowHeight = Int((resolution.split(separator: "x")[1] as NSString).intValue)
         dpi = Int((resolution.split(separator: "x")[2] as NSString).intValue)
-        auxiliaryStorageURL = URL(fileURLWithPath: vmBundlePath + "AuxiliaryStorage")
-        hardwareModelURL = URL(fileURLWithPath: vmBundlePath + "HardwareModel")
+        auxiliaryStorageURL = URL(fileURLWithPath: vmDir + "AuxiliaryStorage")
+        hardwareModelURL = URL(fileURLWithPath: vmDir + "HardwareModel")
 
     }
 
+    // create the macOS graphics configuration
     func createGraphicsDeviceConfiguration() -> VZMacGraphicsDeviceConfiguration {
-
         let graphicsConfiguration = VZMacGraphicsDeviceConfiguration()
-
         if dpi >= 200 {
-            // assuming high density display
+            // assuming HiDPI / Retina
             let scale = window.screen?.backingScaleFactor ?? 1.0
             // scale the display config up so it's higher res in the window size user specified
             // if user said 1200x800, window will be sized 1200x800, but display will be 2400x1600 (higher density)
             windowWidth = windowWidth * Int(scale)
             windowHeight = windowHeight * Int(scale)
         }
-
+        // create and return the graphics config
         graphicsConfiguration.displays = [
             VZMacGraphicsDisplayConfiguration(widthInPixels: windowWidth, heightInPixels: windowHeight, pixelsPerInch: dpi)
         ]
-
         return graphicsConfiguration
     }
 
+    // create the mac platform files
     private func createMacPlatform(macOSConfiguration: VZMacOSConfigurationRequirements) -> VZMacPlatformConfiguration {
         let platform = VZMacPlatformConfiguration()
 
@@ -142,12 +143,8 @@ class MacVM: CommonVM {
         virtualMachine.delegate = self
     }
 
-    func configureAndStartVirtualMachine() {
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
         self.createVirtualMachine(macOSConfiguration: nil)
         self.startVirtualMachine(captureSystemKeys: true)
-    }
-
-    func applicationDidFinishLaunching(_ aNotification: Notification) {
-        configureAndStartVirtualMachine()
     }
 }

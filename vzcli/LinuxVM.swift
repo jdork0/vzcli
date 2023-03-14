@@ -13,6 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+// See LICENSE file
+//
 
 import Foundation
 import AppKit
@@ -21,13 +23,13 @@ import Virtualization
 class LinuxVM: CommonVM {
 
     
-    override init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmpath: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
+    override init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
 
-        super.init(cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmpath: vmpath, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
+        super.init(cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmdir: vmdir, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
 
-        vmTypePath = self.vmBundlePath + linuxMarker
+        vmTypePath = self.vmDir + linuxMarker
         if initImg != "" {
-            self.needsInstall = true
+            self.initializeVM = true
             self.initImg = initimg
         }
     }
@@ -59,7 +61,7 @@ class LinuxVM: CommonVM {
         let bootloader = VZEFIBootLoader()
         let disksArray = NSMutableArray()
 
-        if needsInstall {
+        if initializeVM {
             // create the machine identifier and efi store
             platform.machineIdentifier = createAndSaveMachineIdentifier()
             bootloader.variableStore = createEFIVariableStore()
@@ -73,41 +75,31 @@ class LinuxVM: CommonVM {
 
         config.platform = platform
         config.bootLoader = bootloader
-
         disksArray.add(createBlockDeviceConfiguration())
         guard let disks = disksArray as? [VZStorageDeviceConfiguration] else {
             print("Invalid disksArray.")
             exit(1)
         }
         config.storageDevices = disks
-
         config.networkDevices = createNetworkDeviceConfiguration()
         config.graphicsDevices = [createGraphicsDeviceConfiguration()]
         config.audioDevices = [createInputAudioDeviceConfiguration(), createOutputAudioDeviceConfiguration()]
-
         config.keyboards = [VZUSBKeyboardConfiguration()]
         config.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
         config.consoleDevices = [createSpiceAgentConsoleDeviceConfiguration()]
-
         if directoryShares != "" {
             config.directorySharingDevices = createDirectoryShareConfiguration()
         }
-
         try! config.validate()
         virtualMachine = VZVirtualMachine(configuration: config)
     }
 
-    func configureAndStartVirtualMachine() {
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
+        if initializeVM {
+            initEmptyVM()
+        }
         self.createVirtualMachine()
         self.startVirtualMachine(captureSystemKeys: false)
-    }
-
-    func applicationDidFinishLaunching(_ aNotification: Notification) {
-        if needsInstall {
-            createVMBundle()
-            createMainDiskImage()
-        }
-        configureAndStartVirtualMachine()
     }
     
 }

@@ -1,1 +1,1 @@
-gomobile bind -target macos -o ../usernet.xcframework
+gomobile bind -target macos/arm64 -o ../usernet.xcframework

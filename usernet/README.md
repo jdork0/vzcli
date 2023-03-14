@@ -5,4 +5,5 @@
 - go install golang.org/x/mobile/cmd/gomobile@latest
 - gomobile init
 - cd /path/to/usernet
-- ./build.sh
+- gomobile bind -target macos/arm64 -o ../usernet.xcframework
+

@@ -13,6 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+// See LICENSE file
+//
 
 import Foundation
 import Virtualization
@@ -23,16 +25,14 @@ class CreateMacVM: MacVM {
     private var downloadObserver: NSKeyValueObservation?
     private var installationObserver: NSKeyValueObservation?
     
-    override init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmpath: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
-        super.init(cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmpath: vmpath, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
-        vmTypePath = self.vmBundlePath + macOSMarker
+    override init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
+        super.init(cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmdir: vmdir, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
+        vmTypePath = self.vmDir + macOSMarker
     }
     
     override func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // create the vm directory
-        createVMBundle()
-        // create an empty disk image
-        createMainDiskImage()
+        // initialize empty vm
+        initEmptyVM()
         // install macOS from restore image or download latest
         if initImg != "" {
             // install from given image
@@ -40,8 +40,8 @@ class CreateMacVM: MacVM {
             installMacOS(ipswURL: restoreImageURL!)
         } else {
             // download latest image and install from that
+            self.restoreImageURL = URL(fileURLWithPath: self.vmDir + "RestoreImage.ipsw")
             download {
-                self.restoreImageURL = URL(fileURLWithPath: self.vmBundlePath + "RestoreImage.ipsw")
                 self.installMacOS(ipswURL: self.restoreImageURL!)
             }
         }
@@ -63,15 +63,14 @@ class CreateMacVM: MacVM {
     private func downloadRestoreImage(restoreImage: VZMacOSRestoreImage, completionHandler: @escaping () -> Void) {
         let downloadTask = URLSession.shared.downloadTask(with: restoreImage.url) { localURL, response, error in
             if let error = error {
-                print("Download failed. \(error.localizedDescription).")
+                print("Download failed: " + error.localizedDescription)
                 exit(1)
             }
-
             guard (try? FileManager.default.moveItem(at: localURL!, to: self.restoreImageURL!)) != nil else {
-                print("Failed to move downloaded restore image to \(self.restoreImageURL!).")
+                print("Failed to move downloaded restore image to: " + self.restoreImageURL!.absoluteString)
                 exit(1)
             }
-            print(" done.")
+            print("Done.")
             completionHandler()
         }
 
@@ -80,7 +79,7 @@ class CreateMacVM: MacVM {
             let floorValue = Int(floor(change.newValue! * 100))
             if downloadProgress != floorValue {
                 downloadProgress = floorValue
-                print("Restore image download progress: " + String(floorValue) + "%%")
+                print("Restore image download progress: " + String(floorValue) + "%")
             }
         }
         downloadTask.resume()
@@ -111,7 +110,6 @@ class CreateMacVM: MacVM {
         }
 
         DispatchQueue.main.async { [self] in
-            createMainDiskImage()
             createVirtualMachine(macOSConfiguration: macOSConfiguration)
             startInstallation(restoreImageURL: restoreImage.url)
         }
@@ -136,7 +134,7 @@ class CreateMacVM: MacVM {
             let floorValue = Int(floor(change.newValue! * 100))
             if installProgress != floorValue {
                 installProgress = floorValue
-                print("Installation progress: " + String(floorValue) + "%%")
+                print("Installation progress: " + String(floorValue) + "%")
             }
         }
     }

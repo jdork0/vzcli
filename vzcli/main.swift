@@ -13,6 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+// See LICENSE file
+//
 
 import Foundation
 import Virtualization
@@ -31,7 +33,7 @@ struct vzcli: ParsableCommand {
     @Option(help: "Use specified restore.ipsw instead of downloading latest.") var initMacosIPSW = ""
     @Option(help: "Disk size in GB.") var initDiskSize = UInt64(64)
     @Flag(help: "Generate a MAC Address to use with bridged networking.") var generateMac = false
-    @Argument(help: "Path to VM directory") var vmPath: String
+    @Argument(help: "Path to VM directory") var vmDir: String
 
     func run() {
 
@@ -43,31 +45,35 @@ struct vzcli: ParsableCommand {
         
         let app = NSApplication.shared
                 
-        if !headless {
+        if headless || initMacos || initMacosIPSW != "" {
+            // no window / dock icon
+            app.setActivationPolicy(.prohibited)
+        } else {
             app.setActivationPolicy(.regular)
         }
+
         // launch a linux vm
-        if initLinux != "" || FileManager.default.fileExists(atPath: vmPath + "/" + linuxMarker) {
-            let delegate = LinuxVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmpath: vmPath, netconf: net, sharing: virtiofs, initimg: initLinux, initDiskSize: initDiskSize)
+        if initLinux != "" || FileManager.default.fileExists(atPath: vmDir + "/" + linuxMarker) {
+            let delegate = LinuxVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initLinux, initDiskSize: initDiskSize)
             app.delegate = delegate
             app.run()
             return
         }
-        // create a new macOS vm
+        // create a new macOS vm (headless)
         if initMacos || initMacosIPSW != "" {
-            let delegate = CreateMacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmpath: vmPath, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize)
+            let delegate = CreateMacVM(cpus: cpus, ram: UInt64(mem), headless: false, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize)
             app.delegate = delegate
             app.run()
             return
         }
         // launch an existing macOS vm
-        if FileManager.default.fileExists(atPath: vmPath + "/" + macOSMarker) {
-            let delegate = MacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmpath: vmPath, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize)
+        if FileManager.default.fileExists(atPath: vmDir + "/" + macOSMarker) {
+            let delegate = MacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize)
             app.delegate = delegate
             app.run()
             return
         }
-        print("No vm found: " + vmPath)
+        print("No vm found: " + vmDir)
     }
 }
 

@@ -1,9 +1,21 @@
 //
-//  File.swift
-//  vzcmd
+// Copyright © 2023 Jason Kelly. All rights reserved.
 //
-//  Created by Jason Kelly on 2023-03-05.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// See LICENSE file
+//
+
 
 import Virtualization
 import System
@@ -17,7 +29,7 @@ var macOSMarker = ".macos"
 
 class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     
-    var vmBundlePath: String
+    var vmDir: String
     var vmTypePath = ""
     var initImg = ""
     var mainDiskImagePath: String
@@ -28,7 +40,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     var machineIdentifierPath: String
     var directoryShares: String
     var netConf: String
-    var needsInstall = false
+    var initializeVM = false
     var virtualMachine: VZVirtualMachine!
     var enableUI: Bool
     var window: NSWindow
@@ -36,14 +48,14 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     var windowHeight: Int
 
     
-    init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmpath: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
+    init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
 
-        vmBundlePath = vmpath + "/"
-        mainDiskImagePath = vmBundlePath + "Disk.img"
+        vmDir = vmdir + "/"
+        mainDiskImagePath = vmDir + "Disk.img"
         cpuCount = cpus
         memSizeMB = ram
-        efiVariableStorePath = vmBundlePath + "NVRAM"
-        machineIdentifierPath = vmBundlePath + "MachineIdentifier"
+        efiVariableStorePath = vmDir + "NVRAM"
+        machineIdentifierPath = vmDir + "MachineIdentifier"
         initImg = initimg
         netConf = netconf
         directoryShares = sharing
@@ -57,48 +69,29 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         super.init()
     }
 
-    func createVMBundle() {
-        // fail out of the bundle directory already exists
+    func initEmptyVM() {
+        // fail out if the directory already exists
         var isDir:ObjCBool = true
-        if FileManager.default.fileExists(atPath: vmBundlePath, isDirectory: &isDir) {
-            print("Directory already exists: " + vmBundlePath)
+        if FileManager.default.fileExists(atPath: vmDir, isDirectory: &isDir) {
+            print("Directory already exists: " + vmDir)
             exit(1)
         }
-        // try to create the bundle directory and marker file for vm type
         do {
-            try FileManager.default.createDirectory(atPath: vmBundlePath, withIntermediateDirectories: false)
-            let typeCreated = FileManager.default.createFile(atPath: vmTypePath, contents: nil, attributes: nil)
-            if !typeCreated {
-                print("Could not create vm marker: " + vmTypePath)
-                exit(1)
-            }
+            // create the directory
+            try FileManager.default.createDirectory(atPath: vmDir, withIntermediateDirectories: false)
+            // create the type marker
+            FileManager.default.createFile(atPath: vmTypePath, contents: nil, attributes: nil)
+            // initialize an empty disk image
+            FileManager.default.createFile(atPath: mainDiskImagePath, contents: nil, attributes: nil)
+            let mainDiskFileHandle = try FileHandle(forWritingTo: URL(fileURLWithPath: mainDiskImagePath))
+            try mainDiskFileHandle.truncate(atOffset: mainDiskSize * 1024 * 1024 * 1024)
         } catch {
-            print("Failed to create directory: " + vmBundlePath)
+            print("Failed to initialize empty vm: " + vmDir)
             exit(1)
         }
     }
     
-    func createMainDiskImage() {
-        let diskCreated = FileManager.default.createFile(atPath: mainDiskImagePath, contents: nil, attributes: nil)
-        if !diskCreated {
-            print("Failed to create the main disk image.")
-            exit(1)
-        }
-
-        guard let mainDiskFileHandle = try? FileHandle(forWritingTo: URL(fileURLWithPath: mainDiskImagePath)) else {
-            print("Failed to get the file handle for the main disk image.")
-            exit(1)
-        }
-
-        do {
-            try mainDiskFileHandle.truncate(atOffset: mainDiskSize * 1024 * 1024 * 1024)
-        } catch {
-            print("Failed to truncate the main disk image.")
-            exit(1)
-        }
-    }
-
-    // Create an empty disk image for the virtual machine.
+    // attach the disk image
     func createBlockDeviceConfiguration() -> VZVirtioBlockDeviceConfiguration {
         guard let mainDiskAttachment = try? VZDiskImageStorageDeviceAttachment(url: URL(fileURLWithPath: mainDiskImagePath), readOnly: false) else {
             print("Failed to create main disk attachment.")
@@ -108,6 +101,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return mainDisk
     }
 
+    // validate cpu is within bounds
     func validateCPUCount(testCPUCount: Int) -> Int {
         var virtualCPUCount = testCPUCount
         virtualCPUCount = max(virtualCPUCount, VZVirtualMachineConfiguration.minimumAllowedCPUCount)
@@ -115,6 +109,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return virtualCPUCount
     }
 
+    // validate memory setting and return in bytes
     func validateMemorySize(testMemSize: UInt64) -> UInt64 {
         var memorySize = (testMemSize * 1024 * 1024) as UInt64
         memorySize = max(memorySize, VZVirtualMachineConfiguration.minimumAllowedMemorySize)
@@ -122,6 +117,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return memorySize
     }
 
+    // create the machine identifier
     func createAndSaveMachineIdentifier() -> VZGenericMachineIdentifier {
         let machineIdentifier = VZGenericMachineIdentifier()
         // Store the machine identifier to disk so it can be retrieved on next boot
@@ -129,13 +125,13 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return machineIdentifier
     }
 
+    // retrieve the machine identifier
     func retrieveMachineIdentifier() -> VZGenericMachineIdentifier {
         // Retrieve the machine identifier.
         guard let machineIdentifierData = try? Data(contentsOf: URL(fileURLWithPath: machineIdentifierPath)) else {
             print("Failed to retrieve the machine identifier data.")
             exit(1)
         }
-
         guard let machineIdentifier = VZGenericMachineIdentifier(dataRepresentation: machineIdentifierData) else {
             print("Failed to create the machine identifier.")
             exit(1)
@@ -143,6 +139,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return machineIdentifier
     }
 
+    // create efi store
     func createEFIVariableStore() -> VZEFIVariableStore {
         guard let efiVariableStore = try? VZEFIVariableStore(creatingVariableStoreAt: URL(fileURLWithPath: efiVariableStorePath)) else {
             print("Failed to create the EFI variable store.")
@@ -151,6 +148,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return efiVariableStore
     }
 
+    // retrieve efi store
     func retrieveEFIVariableStore() -> VZEFIVariableStore {
         if !FileManager.default.fileExists(atPath: efiVariableStorePath) {
             print("EFI variable store does not exist.")
@@ -208,6 +206,8 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         }
     }
     
+    // create the network devices
+    // TODO: refactor with different methods per type
     func createNetworkDeviceConfiguration() -> [VZVirtioNetworkDeviceConfiguration] {
 
         // array of network devices to add
@@ -384,10 +384,8 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     // create the input audio device
     func createInputAudioDeviceConfiguration() -> VZVirtioSoundDeviceConfiguration {
         let inputAudioDevice = VZVirtioSoundDeviceConfiguration()
-
         let inputStream = VZVirtioSoundDeviceInputStreamConfiguration()
         inputStream.source = VZHostAudioInputStreamSource()
-
         inputAudioDevice.streams = [inputStream]
         return inputAudioDevice
     }
@@ -395,10 +393,8 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     // create the output audio device
     func createOutputAudioDeviceConfiguration() -> VZVirtioSoundDeviceConfiguration {
         let outputAudioDevice = VZVirtioSoundDeviceConfiguration()
-
         let outputStream = VZVirtioSoundDeviceOutputStreamConfiguration()
         outputStream.sink = VZHostAudioOutputStreamSink()
-
         outputAudioDevice.streams = [outputStream]
         return outputAudioDevice
     }
@@ -447,19 +443,18 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
 
     // virtual machine stopped with error
     func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
-        print("Virtual machine did stop with error: \(error.localizedDescription)")
+        print("VM stopped with error: " + error.localizedDescription)
         exit(1)
     }
 
     // virtual machine stopped
     func guestDidStop(_ virtualMachine: VZVirtualMachine) {
-        print("Guest did stop virtual machine.")
+        print("VM stopped.")
         exit(0)
     }
 
     // net error
     func virtualMachine(_ virtualMachine: VZVirtualMachine, networkDevice: VZNetworkDevice, attachmentWasDisconnectedWithError error: Error) {
-        print("Network attachment was disconnected with error: \(error.localizedDescription)")
+        print("Network attachment error: " + error.localizedDescription)
     }
-
 }
