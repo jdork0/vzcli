@@ -26,7 +26,7 @@ struct vzcli: ParsableCommand {
     @Option(help: "RAM in MB.") var mem = 8192
     @Option(help: "Display resolution [width x height x dpi] (dpi macOS only)") var resolution = "1280x800x224"
     @Option(help: "List of type:options\n  user:[host:<hostport>:<guestport>,<hostport2>:<guestport2>,...]\n  bridged:interface:mac\n  nat:mac\nexample: --net user:2222,22+bridged:en0:2e:1c:46:7a:f8:68\n") var net = "user"
-    @Option(help: "List of directories exposed to guest by virtiofs\n  rosetta (linux rosetta support)\n  tag:directory:ro|rw\nexample: --virtiofs rosetta+home:/Users/test/test:rw\n") var virtiofs = ""
+    @Option(help: "List of directories exposed to guest by virtiofs\n  rosetta (linux rosetta support)\n  tag:directory:ro|rw\nexample: --virtiofs rosetta+homedir:/Users/test/test:rw\n") var virtiofs = ""
     @Flag(help: "No GUI") var headless = false
     @Option(help: "Path to Linux install iso") var initLinux = ""
     @Flag(help: "Create a new macOS VM") var initMacos = false
