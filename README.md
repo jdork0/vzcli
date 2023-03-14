@@ -5,6 +5,14 @@ The purpose of this project was to provide a quick command line method to create
 
 **Only arm64 supported.** 
 
+# Usage notes
+
+Apple signing requires this be distributed as an app bundle.  I use an alias to simplify accessing the command line app.
+```
+$ alias vzcli='/Applications/vzcli.app/Contents/MacOS/vzcli'
+$ vzcli ...
+```
+
 # Features
 
 ## Networking
@@ -69,20 +77,6 @@ $ vzcli ~/vm/macOS
 ```
 
 NOTE: If the ```--resolution``` flag contains a DPI >= 200 the display will be scaled by the scaling factor of the display.  On a retina macbook, a 1200x800x224 resolution will create a window sized 1200x800, but the VM will be running at 2400x1600 within that window for a sharper display.
-
-# Usage notes
-
-Apple signing requires this be distributed as an app bundle.  I use an alias to simplify accessing the command line app.
-```
-$ alias vzcli='/Applications/vzcli.app/Contents/MacOS/vzcli'
-$ vzcli ...
-```
-Personally, I use screen aliases to launch headless Linux VMs in the background:
-```
-$ alias ubuntu='screen -d -m -S ubuntu /Applications/vzcli.app/Contents/MacOS/vzcli --net user:2222:22 --headless --virtiofs rosetta,home:/Users/myuser:rw ~/vm/ubuntu'
-$ ubuntu
-$ ssh -p 2222 localhost
-```
 
 ## Usage
 
