@@ -416,7 +416,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     }
 
     // starts the virtual machine
-    func startVirtualMachine(captureSystemKeys: Bool)
+    func startVirtualMachine(captureSystemKeys: Bool, bootOpts: VZVirtualMachineStartOptions)
     {
         DispatchQueue.main.async {
             // display the window and connect to vm if not headless
@@ -439,13 +439,11 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
             // handle delegate calls
             self.virtualMachine.delegate = self
             // start the vm
-            self.virtualMachine.start(completionHandler: { (result) in
-                switch result {
-                case let .failure(error):
-                    print("Virtual machine failed to start with error: \(error)")
-                    exit(1)
-                default:
-                    print("Virtual machine successfully started.")
+            self.virtualMachine.start(options: bootOpts, completionHandler: { (result) in
+                if result != nil {
+                    print("VM failed to start.")
+                } else {
+                    print("VM started.")
                 }
             })
         }

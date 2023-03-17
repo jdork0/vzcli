@@ -30,6 +30,7 @@ struct vzcli: ParsableCommand {
     @Flag(help: "No GUI") var headless = false
     @Option(help: "Path to Linux install iso") var initLinux = ""
     @Flag(help: "Create a new macOS VM") var initMacos = false
+    @Flag(help: "Boot macOS in recovery mode") var recovery = false
     @Option(help: "Use specified restore.ipsw instead of downloading latest.") var initMacosIPSW = ""
     @Option(help: "Disk size in GB.") var initDiskSize = UInt64(64)
     @Flag(help: "Generate a MAC Address to use with bridged networking.") var generateMac = false
@@ -68,7 +69,7 @@ struct vzcli: ParsableCommand {
         }
         // launch an existing macOS vm
         if FileManager.default.fileExists(atPath: vmDir + "/" + macOSMarker) {
-            let delegate = MacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize)
+            let delegate = MacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize, recovery: recovery)
             app.delegate = delegate
             app.run()
             return

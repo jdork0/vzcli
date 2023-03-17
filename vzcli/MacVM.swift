@@ -25,11 +25,13 @@ class MacVM: CommonVM {
     var dpi = 224
     var auxiliaryStorageURL: URL?
     var hardwareModelURL: URL?
+    var recoveryBoot = false
     
-    override init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
+    init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64, recovery: Bool) {
         
         super.init(cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmdir: vmdir, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
         
+        recoveryBoot = recovery
         windowWidth = Int((resolution.split(separator: "x")[0] as NSString).intValue)
         windowHeight = Int((resolution.split(separator: "x")[1] as NSString).intValue)
         dpi = Int((resolution.split(separator: "x")[2] as NSString).intValue)
@@ -144,7 +146,9 @@ class MacVM: CommonVM {
     }
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        let opts = VZMacOSVirtualMachineStartOptions()
+        opts.startUpFromMacOSRecovery = recoveryBoot
         self.createVirtualMachine(macOSConfiguration: nil)
-        self.startVirtualMachine(captureSystemKeys: true)
+        self.startVirtualMachine(captureSystemKeys: true, bootOpts: opts)
     }
 }

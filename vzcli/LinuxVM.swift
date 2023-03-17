@@ -98,8 +98,9 @@ class LinuxVM: CommonVM {
         if initializeVM {
             initEmptyVM()
         }
+        let opts = VZVirtualMachineStartOptions()
         self.createVirtualMachine()
-        self.startVirtualMachine(captureSystemKeys: false)
+        self.startVirtualMachine(captureSystemKeys: false, bootOpts: opts)
     }
     
 }
