@@ -30,6 +30,7 @@ var macOSMarker = ".macos"
 class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     
     var vmDir: String
+    var vmName: String
     var vmTypePath = ""
     var initImg = ""
     var mainDiskImagePath: String
@@ -51,6 +52,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
 
         vmDir = vmdir + "/"
+        vmName = CommonVM.parseVMName(vmpath: vmdir)
         mainDiskImagePath = vmDir + "Disk.img"
         cpuCount = cpus
         memSizeMB = ram
@@ -64,7 +66,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         windowHeight = Int((resolution.split(separator: "x")[1] as NSString).intValue)
 
         window = NSWindow(contentRect: NSMakeRect(200, 200, CGFloat(windowWidth), CGFloat(windowHeight)),
-                          styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
+                          styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
 
         super.init()
     }
@@ -433,15 +435,19 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
                 // set it so vm handles input without having to click window
                 self.window.makeFirstResponder(virtualMachineView)
                 self.window.makeKeyAndOrderFront(nil)
+                // set the window and badge to the vm name
+                NSApp.dockTile.badgeLabel = self.vmName
+                self.window.title = self.vmName
                 // bring the window to front
                 NSApp.activate(ignoringOtherApps: true)
             }
             // handle delegate calls
             self.virtualMachine.delegate = self
             // start the vm
-            self.virtualMachine.start(options: bootOpts, completionHandler: { (result) in
-                if result != nil {
-                    print("VM failed to start.")
+            self.virtualMachine.start(options: bootOpts, completionHandler: { (error) in
+                if error != nil {
+                    print("VM failed to start: " + error!.localizedDescription)
+                    exit(1)
                 } else {
                     print("VM started.")
                 }
@@ -471,4 +477,10 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     func virtualMachine(_ virtualMachine: VZVirtualMachine, networkDevice: VZNetworkDevice, attachmentWasDisconnectedWithError error: Error) {
         print("Network attachment error: " + error.localizedDescription)
     }
+    
+    static func parseVMName(vmpath: String) -> String {
+        let pathComponents = vmpath.split{ $0 == "/" }.map(String.init)
+        return pathComponents.last!
+    }
+    
 }

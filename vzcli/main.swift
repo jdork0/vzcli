@@ -34,6 +34,7 @@ struct vzcli: ParsableCommand {
     @Option(help: "Use specified restore.ipsw instead of downloading latest.") var initMacosIPSW = ""
     @Option(help: "Disk size in GB.") var initDiskSize = UInt64(64)
     @Flag(help: "Generate a MAC Address to use with bridged networking.") var generateMac = false
+    @Flag(help: "List available bridged networking interfaces.") var listBridges = false
     @Argument(help: "Path to VM directory") var vmDir: String
 
     func run() {
@@ -41,6 +42,13 @@ struct vzcli: ParsableCommand {
         if generateMac {
             let randomMac = VZMACAddress.randomLocallyAdministered()
             print("Randon MAC Address: " + randomMac.description)
+            return
+        }
+        
+        if listBridges {
+            for interface in VZBridgedNetworkInterface.networkInterfaces {
+                print(interface.identifier)
+            }
             return
         }
         
@@ -57,6 +65,7 @@ struct vzcli: ParsableCommand {
         if initLinux != "" || FileManager.default.fileExists(atPath: vmDir + "/" + linuxMarker) {
             let delegate = LinuxVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initLinux, initDiskSize: initDiskSize)
             app.delegate = delegate
+//            app.dockTile.badgeLabel = CommonVM.parseVMName(vmpath: vmDir)
             app.run()
             return
         }
@@ -64,6 +73,7 @@ struct vzcli: ParsableCommand {
         if initMacos || initMacosIPSW != "" {
             let delegate = CreateMacVM(cpus: cpus, ram: UInt64(mem), headless: false, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize)
             app.delegate = delegate
+//            app.dockTile.badgeLabel = CommonVM.parseVMName(vmpath: vmDir)
             app.run()
             return
         }
@@ -71,6 +81,7 @@ struct vzcli: ParsableCommand {
         if FileManager.default.fileExists(atPath: vmDir + "/" + macOSMarker) {
             let delegate = MacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize, recovery: recovery)
             app.delegate = delegate
+//            app.dockTile.badgeLabel = CommonVM.parseVMName(vmpath: vmDir)
             app.run()
             return
         }
