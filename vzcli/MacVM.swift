@@ -27,9 +27,9 @@ class MacVM: CommonVM {
     var hardwareModelURL: URL?
     var recoveryBoot = false
     
-    init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64, recovery: Bool) {
+    init(vmname: String, cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64, recovery: Bool) {
         
-        super.init(cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmdir: vmdir, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
+        super.init(vmname: vmname, cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmdir: vmdir, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
         
         recoveryBoot = recovery
         windowWidth = Int((resolution.split(separator: "x")[0] as NSString).intValue)

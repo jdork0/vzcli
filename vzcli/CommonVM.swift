@@ -49,16 +49,22 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     var windowHeight: Int
 
     
-    init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
+    init(vmname: String, cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
 
         vmDir = vmdir + "/"
-        vmName = CommonVM.parseVMName(vmpath: vmdir)
+        if vmname == "" {
+            let pathComponents = vmDir.split{ $0 == "/" }.map(String.init)
+            vmName = pathComponents.last!
+        } else {
+            vmName = vmname
+        }
         mainDiskImagePath = vmDir + "Disk.img"
         cpuCount = cpus
         memSizeMB = ram
         efiVariableStorePath = vmDir + "NVRAM"
         machineIdentifierPath = vmDir + "MachineIdentifier"
         initImg = initimg
+        mainDiskSize = initDiskSize
         netConf = netconf
         directoryShares = sharing
         enableUI = !headless
@@ -423,6 +429,9 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         DispatchQueue.main.async {
             // display the window and connect to vm if not headless
             if self.enableUI {
+                // set the window and dock badge to the vm name
+                NSApp.dockTile.badgeLabel = self.vmName
+                self.window.title = self.vmName
                 // open a window with the GUI
                 self.window.orderFrontRegardless()
                 // get the view of virtualmachine
@@ -435,9 +444,6 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
                 // set it so vm handles input without having to click window
                 self.window.makeFirstResponder(virtualMachineView)
                 self.window.makeKeyAndOrderFront(nil)
-                // set the window and badge to the vm name
-                NSApp.dockTile.badgeLabel = self.vmName
-                self.window.title = self.vmName
                 // bring the window to front
                 NSApp.activate(ignoringOtherApps: true)
             }
@@ -476,11 +482,6 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     // net error
     func virtualMachine(_ virtualMachine: VZVirtualMachine, networkDevice: VZNetworkDevice, attachmentWasDisconnectedWithError error: Error) {
         print("Network attachment error: " + error.localizedDescription)
-    }
-    
-    static func parseVMName(vmpath: String) -> String {
-        let pathComponents = vmpath.split{ $0 == "/" }.map(String.init)
-        return pathComponents.last!
     }
     
 }

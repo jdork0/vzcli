@@ -28,6 +28,7 @@ struct vzcli: ParsableCommand {
     @Option(help: "List of type:options\n  user:[host:<hostport>:<guestport>,<hostport2>:<guestport2>,...]\n  bridged:interface:mac\n  nat:mac\nexample: --net user:2222,22+bridged:en0:2e:1c:46:7a:f8:68\n") var net = "user"
     @Option(help: "List of directories exposed to guest by virtiofs\n  rosetta (linux rosetta support)\n  tag:directory:ro|rw\nexample: --virtiofs rosetta+homedir:/Users/test/test:rw\n") var virtiofs = ""
     @Flag(help: "No GUI") var headless = false
+    @Option(help: "Short name of vm") var name = ""
     @Option(help: "Path to Linux install iso") var initLinux = ""
     @Flag(help: "Create a new macOS VM") var initMacos = false
     @Flag(help: "Boot macOS in recovery mode") var recovery = false
@@ -63,9 +64,8 @@ struct vzcli: ParsableCommand {
 
         // launch a linux vm
         if initLinux != "" || FileManager.default.fileExists(atPath: vmDir + "/" + linuxMarker) {
-            let delegate = LinuxVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initLinux, initDiskSize: initDiskSize)
+            let delegate = LinuxVM(vmname: name, cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initLinux, initDiskSize: initDiskSize)
             app.delegate = delegate
-//            app.dockTile.badgeLabel = CommonVM.parseVMName(vmpath: vmDir)
             app.run()
             return
         }
@@ -73,15 +73,13 @@ struct vzcli: ParsableCommand {
         if initMacos || initMacosIPSW != "" {
             let delegate = CreateMacVM(cpus: cpus, ram: UInt64(mem), headless: false, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize)
             app.delegate = delegate
-//            app.dockTile.badgeLabel = CommonVM.parseVMName(vmpath: vmDir)
             app.run()
             return
         }
         // launch an existing macOS vm
         if FileManager.default.fileExists(atPath: vmDir + "/" + macOSMarker) {
-            let delegate = MacVM(cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize, recovery: recovery)
+            let delegate = MacVM(vmname: name, cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize, recovery: recovery)
             app.delegate = delegate
-//            app.dockTile.badgeLabel = CommonVM.parseVMName(vmpath: vmDir)
             app.run()
             return
         }

@@ -23,9 +23,9 @@ import Virtualization
 class LinuxVM: CommonVM {
 
     
-    override init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
+    override init(vmname: String, cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
 
-        super.init(cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmdir: vmdir, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
+        super.init(vmname: vmname, cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmdir: vmdir, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
 
         vmTypePath = self.vmDir + linuxMarker
         if initImg != "" {
