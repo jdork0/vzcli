@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/containers/gvisor-tap-vsock v0.6.1
 	github.com/sirupsen/logrus v1.9.0
-	golang.org/x/sync v0.1.0
+	golang.org/x/sync v0.2.0
 )
 
 require (
