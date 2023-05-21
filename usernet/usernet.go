@@ -3,15 +3,12 @@ package usernet
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net"
 	"os"
 	"strings"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -59,7 +56,6 @@ func StartUserNet(sockFD int32, portForwards string) {
 	}
 
 	// try to turn off golang logging
-	// some still sneaking through
 	null, _ := os.Open(os.DevNull)
 	os.Stdout = null
 	os.Stderr = null
