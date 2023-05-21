@@ -3,12 +3,15 @@ package usernet
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"strings"
 
 	"github.com/containers/gvisor-tap-vsock/pkg/types"
 	"github.com/containers/gvisor-tap-vsock/pkg/virtualnetwork"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
 
