@@ -34,6 +34,16 @@ class LinuxVM: CommonVM {
         }
     }
     
+    // attach the disk image
+    override func createBlockDeviceConfiguration() -> VZVirtioBlockDeviceConfiguration {
+        guard let mainDiskAttachment = try? VZDiskImageStorageDeviceAttachment(url: URL(fileURLWithPath: mainDiskImagePath), readOnly: false, cachingMode: .cached, synchronizationMode: .fsync) else {
+            print("Failed to create main disk attachment.")
+            exit(1)
+        }
+        let mainDisk = VZVirtioBlockDeviceConfiguration(attachment: mainDiskAttachment)
+        return mainDisk
+    }
+
     private func createGraphicsDeviceConfiguration() -> VZVirtioGraphicsDeviceConfiguration {
         let graphicsDevice = VZVirtioGraphicsDeviceConfiguration()
         graphicsDevice.scanouts = [

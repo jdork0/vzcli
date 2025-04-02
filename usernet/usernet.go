@@ -3,7 +3,7 @@ package usernet
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -62,8 +62,8 @@ func StartUserNet(sockFD int32, portForwards string) {
 	null, _ := os.Open(os.DevNull)
 	os.Stdout = null
 	os.Stderr = null
-	logrus.SetOutput(ioutil.Discard)
-	log.SetOutput(ioutil.Discard)
+	logrus.SetOutput(io.Discard)
+	log.SetOutput(io.Discard)
 
 	// create a virtual network
 	vn, err := virtualnetwork.New(&config)
