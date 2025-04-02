@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 90;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15,6 +15,8 @@
 		82400BF129BAB8A20069C331 /* CommonVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82400BEE29BAB8A20069C331 /* CommonVM.swift */; };
 		82400BF329BAB8E00069C331 /* usernet.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82400BF229BAB8E00069C331 /* usernet.xcframework */; };
 		82400BF629BAB8EB0069C331 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 82400BF529BAB8EB0069C331 /* ArgumentParser */; };
+		D3C931F52D9CD63C006C2CBD /* libresolv.9.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D3C931F32D9CD63C006C2CBD /* libresolv.9.tbd */; };
+		D3C931F62D9CD63C006C2CBD /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D3C931F42D9CD63C006C2CBD /* libresolv.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,17 +29,19 @@
 		82400BED29BAB8A20069C331 /* CreateMacVM.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CreateMacVM.swift; sourceTree = "<group>"; };
 		82400BEE29BAB8A20069C331 /* CommonVM.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommonVM.swift; sourceTree = "<group>"; };
 		82400BF229BAB8E00069C331 /* usernet.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = usernet.xcframework; sourceTree = SOURCE_ROOT; };
+		D3C931F32D9CD63C006C2CBD /* libresolv.9.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.9.tbd; path = usr/lib/libresolv.9.tbd; sourceTree = SDKROOT; };
+		D3C931F42D9CD63C006C2CBD /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		82400BD329BAB5F80069C331 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
+				D3C931F52D9CD63C006C2CBD /* libresolv.9.tbd in Frameworks */,
+				D3C931F62D9CD63C006C2CBD /* libresolv.tbd in Frameworks */,
 				82400BF629BAB8EB0069C331 /* ArgumentParser in Frameworks */,
 				82400BF329BAB8E00069C331 /* usernet.xcframework in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -46,6 +50,7 @@
 			isa = PBXGroup;
 			children = (
 				82400BD829BAB5F80069C331 /* vzcli */,
+				D3C931F22D9CD63C006C2CBD /* Frameworks */,
 				82400BD729BAB5F80069C331 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -73,6 +78,15 @@
 			path = vzcli;
 			sourceTree = "<group>";
 		};
+		D3C931F22D9CD63C006C2CBD /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D3C931F42D9CD63C006C2CBD /* libresolv.tbd */,
+				D3C931F32D9CD63C006C2CBD /* libresolv.9.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -85,8 +99,6 @@
 				82400BD429BAB5F80069C331 /* Resources */,
 			);
 			buildRules = (
-			);
-			dependencies = (
 			);
 			name = vzcli;
 			packageProductDependencies = (
@@ -112,7 +124,6 @@
 				};
 			};
 			buildConfigurationList = 82400BD129BAB5F80069C331 /* Build configuration list for PBXProject "vzcli" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -123,6 +134,7 @@
 			packageReferences = (
 				82400BF429BAB8EB0069C331 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
 			);
+			preferredProjectObjectVersion = 90;
 			productRefGroup = 82400BD729BAB5F80069C331 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -135,18 +147,15 @@
 /* Begin PBXResourcesBuildPhase section */
 		82400BD429BAB5F80069C331 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				821CC91829BF53BE00E9452E /* Assets.xcassets in Resources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		82400BD229BAB5F80069C331 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				82400BEF29BAB8A20069C331 /* MacVM.swift in Sources */,
 				82400BE929BAB8920069C331 /* main.swift in Sources */,
@@ -154,12 +163,11 @@
 				82400BEB29BAB89B0069C331 /* LinuxVM.swift in Sources */,
 				82400BF129BAB8A20069C331 /* CommonVM.swift in Sources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		82400BE329BAB5F90069C331 /* Debug */ = {
+		82400BE329BAB5F90069C331 /* Debug configuration for PBXProject "vzcli" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -209,7 +217,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 13.1;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -219,7 +227,7 @@
 			};
 			name = Debug;
 		};
-		82400BE429BAB5F90069C331 /* Release */ = {
+		82400BE429BAB5F90069C331 /* Release configuration for PBXProject "vzcli" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -263,7 +271,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 13.1;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -272,7 +280,7 @@
 			};
 			name = Release;
 		};
-		82400BE629BAB5F90069C331 /* Debug */ = {
+		82400BE629BAB5F90069C331 /* Debug configuration for PBXNativeTarget "vzcli" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = arm64;
@@ -298,7 +306,8 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.3.1;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.3.2;
 				PRODUCT_BUNDLE_IDENTIFIER = ca.dotjason.vzcli;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -308,7 +317,7 @@
 			};
 			name = Debug;
 		};
-		82400BE729BAB5F90069C331 /* Release */ = {
+		82400BE729BAB5F90069C331 /* Release configuration for PBXNativeTarget "vzcli" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = arm64;
@@ -334,7 +343,8 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.3.1;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 0.3.2;
 				PRODUCT_BUNDLE_IDENTIFIER = ca.dotjason.vzcli;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -350,19 +360,17 @@
 		82400BD129BAB5F80069C331 /* Build configuration list for PBXProject "vzcli" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				82400BE329BAB5F90069C331 /* Debug */,
-				82400BE429BAB5F90069C331 /* Release */,
+				82400BE329BAB5F90069C331 /* Debug configuration for PBXProject "vzcli" */,
+				82400BE429BAB5F90069C331 /* Release configuration for PBXProject "vzcli" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		82400BE529BAB5F90069C331 /* Build configuration list for PBXNativeTarget "vzcli" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				82400BE629BAB5F90069C331 /* Debug */,
-				82400BE729BAB5F90069C331 /* Release */,
+				82400BE629BAB5F90069C331 /* Debug configuration for PBXNativeTarget "vzcli" */,
+				82400BE729BAB5F90069C331 /* Release configuration for PBXNativeTarget "vzcli" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
