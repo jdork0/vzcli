@@ -28,13 +28,14 @@ var linuxMarker = ".linux"
 var macOSMarker = ".macos"
 
 class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
-    
+
+    var config: VMConfig
     var vmDir: String
     var vmName: String
     var vmTypePath = ""
     var initImg = ""
     var mainDiskImagePath: String
-    var mainDiskSize = UInt64(64)
+    var mainDiskSize: UInt64
     var cpuCount: Int
     var memSizeMB: UInt64
     var efiVariableStorePath: String
@@ -48,28 +49,29 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     var windowWidth: Int
     var windowHeight: Int
 
-    
-    init(vmname: String, cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
 
-        vmDir = vmdir + "/"
-        if vmname == "" {
+    init(config: VMConfig) {
+
+        self.config = config
+        vmDir = config.vmDir + "/"
+        if config.vmName == "" {
             let pathComponents = vmDir.split{ $0 == "/" }.map(String.init)
             vmName = pathComponents.last!
         } else {
-            vmName = vmname
+            vmName = config.vmName
         }
         mainDiskImagePath = vmDir + "Disk.img"
-        cpuCount = cpus
-        memSizeMB = ram
+        cpuCount = config.cpus
+        memSizeMB = config.ramMB
         efiVariableStorePath = vmDir + "NVRAM"
         machineIdentifierPath = vmDir + "MachineIdentifier"
-        initImg = initimg
-        mainDiskSize = initDiskSize
-        netConf = netconf
-        directoryShares = sharing
-        enableUI = !headless
-        windowWidth = Int((resolution.split(separator: "x")[0] as NSString).intValue)
-        windowHeight = Int((resolution.split(separator: "x")[1] as NSString).intValue)
+        initImg = config.initImg
+        mainDiskSize = config.initDiskSizeGB
+        netConf = config.netConf
+        directoryShares = config.directoryShares
+        enableUI = !config.headless
+        windowWidth = Int((config.resolution.split(separator: "x")[0] as NSString).intValue)
+        windowHeight = Int((config.resolution.split(separator: "x")[1] as NSString).intValue)
 
         window = NSWindow(contentRect: NSMakeRect(200, 200, CGFloat(windowWidth), CGFloat(windowHeight)),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
@@ -424,7 +426,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     }
 
     // starts the virtual machine
-    func startVirtualMachine(captureSystemKeys: Bool, bootOpts: VZVirtualMachineStartOptions)
+    func startVirtualMachine(captureSystemKeys: Bool, autoResizeDisplay: Bool, bootOpts: VZVirtualMachineStartOptions)
     {
         DispatchQueue.main.async {
             // display the window and connect to vm if not headless
@@ -437,6 +439,8 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
                 // get the view of virtualmachine
                 let virtualMachineView = VZVirtualMachineView()
                 virtualMachineView.virtualMachine = self.virtualMachine
+                // automatically resize the display on macOS
+                virtualMachineView.automaticallyReconfiguresDisplay = autoResizeDisplay
                 // capture system keys is true for macOS, false for Linux
                 virtualMachineView.capturesSystemKeys = captureSystemKeys
                 // set the window view to the vm view

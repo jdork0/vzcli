@@ -26,15 +26,15 @@ class MacVM: CommonVM {
     var auxiliaryStorageURL: URL?
     var hardwareModelURL: URL?
     var recoveryBoot = false
-    
-    init(vmname: String, cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64, recovery: Bool) {
-        
-        super.init(vmname: vmname, cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmdir: vmdir, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
-        
-        recoveryBoot = recovery
-        windowWidth = Int((resolution.split(separator: "x")[0] as NSString).intValue)
-        windowHeight = Int((resolution.split(separator: "x")[1] as NSString).intValue)
-        dpi = Int((resolution.split(separator: "x")[2] as NSString).intValue)
+
+    override init(config: VMConfig) {
+
+        super.init(config: config)
+
+        recoveryBoot = config.recovery
+        windowWidth = Int((config.resolution.split(separator: "x")[0] as NSString).intValue)
+        windowHeight = Int((config.resolution.split(separator: "x")[1] as NSString).intValue)
+        dpi = Int((config.resolution.split(separator: "x")[2] as NSString).intValue)
         auxiliaryStorageURL = URL(fileURLWithPath: vmDir + "AuxiliaryStorage")
         hardwareModelURL = URL(fileURLWithPath: vmDir + "HardwareModel")
 
@@ -132,9 +132,12 @@ class MacVM: CommonVM {
         config.graphicsDevices = [createGraphicsDeviceConfiguration()]
         config.storageDevices = [createBlockDeviceConfiguration()]
         config.networkDevices = createNetworkDeviceConfiguration()
-        // trackpad causes scrolling to lockup
-        //config.pointingDevices = [VZMacTrackpadConfiguration()]
-        config.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
+        if self.config.useTrackpad {
+            // trackpad causes scrolling to lockup, but allow enabling for testing
+            config.pointingDevices = [VZMacTrackpadConfiguration()]
+        } else {
+            config.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
+        }
         config.keyboards = [VZUSBKeyboardConfiguration()]
         config.audioDevices = [createInputAudioDeviceConfiguration(), createOutputAudioDeviceConfiguration()]
         if directoryShares != "" {
@@ -149,6 +152,6 @@ class MacVM: CommonVM {
         let opts = VZMacOSVirtualMachineStartOptions()
         opts.startUpFromMacOSRecovery = recoveryBoot
         self.createVirtualMachine(macOSConfiguration: nil)
-        self.startVirtualMachine(captureSystemKeys: true, bootOpts: opts)
+        self.startVirtualMachine(captureSystemKeys: config.captureSystemKeys, autoResizeDisplay: config.autoResizeDisplay, bootOpts: opts)
     }
 }

@@ -25,8 +25,8 @@ class CreateMacVM: MacVM {
     private var downloadObserver: NSKeyValueObservation?
     private var installationObserver: NSKeyValueObservation?
     
-    init(cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
-        super.init(vmname: "", cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmdir: vmdir, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize, recovery: false)
+    override init(config: VMConfig) {
+        super.init(config: config)
         vmTypePath = self.vmDir + macOSMarker
     }
     

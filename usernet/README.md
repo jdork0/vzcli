@@ -1,9 +1,24 @@
 # Building notes
-- install homebrew
-- brew install go
-- setup path for go
-- go install golang.org/x/mobile/cmd/gomobile@latest
-- gomobile init
-- cd /path/to/usernet
-- gomobile bind -target macos/arm64 -o ../usernet.xcframework
 
+## Prerequisites
+- Install [Homebrew](https://brew.sh)
+- `brew install go`
+- Ensure `$GOPATH/bin` is in your `PATH`
+
+## Build
+From the `usernet/` directory:
+```
+make
+```
+
+This will install `gomobile`, fetch required dependencies (`golang.org/x/mobile/bind` packages), and build the `usernet.xcframework`.
+
+Alternatively, from the project root:
+```
+make usernet
+```
+
+## Clean
+```
+make clean
+```

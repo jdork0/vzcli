@@ -1,3 +1,4 @@
+
 # vzcli
 Command line app for running arm64 Linux / macOS Virtual Machines using Apple Virtualization Framework.
 
@@ -23,7 +24,7 @@ $ vzcli ...
 
 - _bridged_: Bridged networking.  This works on the signed release binaries, but will not work if you build the code yourself without getting the com.apple.vm.networking entitlement from Apple.  Bridged networking must specify the interface to bridge and the MAC address that will be assigned to the vm.
 
-The ```'vzcli --generate-mac .'``` command can be used generate a random MAC address for use with NAT or Bridged networking.
+The ```'vzcli --generate-mac'``` command can be used generate a random MAC address for use with NAT or Bridged networking.
 
 Multiple network interfaces can be configured on the VM by chaining the configurations with the ```+``` character.  See usage below.
 
@@ -40,7 +41,7 @@ $ vzcli --virtiofs home:/Users/test:ro ~/vm/macos/
 
 # inside macOS
 $ mkdir /path/to/mnt/dir
-$ sudo mount_virtiofs home /path/to/mnt/dir
+$ mount_virtiofs home /path/to/mnt/dir
 ```
 ### *Linux*:
 ```
@@ -81,10 +82,10 @@ NOTE: If the ```--resolution``` flag contains a DPI >= 200 the display will be s
 ## Usage
 
 ```
-USAGE: vzcli [--cpus <cpus>] [--mem <mem>] [--resolution <resolution>] [--net <net>] [--virtiofs <virtiofs>] [--headless] [--init-linux <init-linux>] [--init-macos] [--init-macos-ipsw <init-macos-ipsw>] [--init-disk-size <init-disk-size>] [--generate-mac] <vm-path>
+USAGE: vzcli [--cpus <cpus>] [--mem <mem>] [--resolution <resolution>] [--net <net>] [--virtiofs <virtiofs>] [--headless] [--name <name>] [--init-linux <init-linux>] [--init-macos] [--recovery] [--init-macos-ipsw <init-macos-ipsw>] [--init-disk-size <init-disk-size>] [--generate-mac] [--list-bridges] [--capture-system-keys] [--auto-resize-display] [--use-trackpad] [<vm-path>]
 
 ARGUMENTS:
-  <vm-path>               Path to VM directory
+  <vm-path>               Path to VM directory (required except for --generate-mac and --list-bridges)
 
 OPTIONS:
   --cpus <cpus>           Number of cpus. (default: 4)
@@ -103,13 +104,19 @@ OPTIONS:
                           example: --virtiofs rosetta+homedir:/Users/test/test:rw
 
   --headless              No GUI
+  --name <name>           Short name of vm
   --init-linux <init-linux>
                           Path to Linux install iso
   --init-macos            Create a new macOS VM
+  --recovery              Boot macOS in recovery mode
   --init-macos-ipsw <init-macos-ipsw>
                           Use specified restore.ipsw instead of downloading latest.
   --init-disk-size <init-disk-size>
                           Disk size in GB. (default: 64)
   --generate-mac          Generate a MAC Address to use with bridged networking.
+  --list-bridges          List available bridged networking interfaces.
+  --capture-system-keys   Capture system keys (e.g. Cmd-Tab) in the VM window.
+  --auto-resize-display   Automatically resize the guest display to match the window.
+  --use-trackpad          Use trackpad instead of USB screen coordinate pointing device (macOS guests only).
   -h, --help              Show help information.
 ```

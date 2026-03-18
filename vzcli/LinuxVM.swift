@@ -23,14 +23,13 @@ import Virtualization
 class LinuxVM: CommonVM {
 
     
-    override init(vmname: String, cpus: Int, ram: UInt64, headless: Bool, resolution: String, vmdir: String, netconf: String, sharing: String, initimg: String, initDiskSize: UInt64) {
+    override init(config: VMConfig) {
 
-        super.init(vmname: vmname, cpus: cpus, ram: ram, headless: headless, resolution: resolution, vmdir: vmdir, netconf: netconf, sharing: sharing, initimg: initimg, initDiskSize: initDiskSize)
+        super.init(config: config)
 
         vmTypePath = self.vmDir + linuxMarker
         if initImg != "" {
             self.initializeVM = true
-            self.initImg = initimg
         }
     }
     
@@ -95,7 +94,11 @@ class LinuxVM: CommonVM {
         config.graphicsDevices = [createGraphicsDeviceConfiguration()]
         config.audioDevices = [createInputAudioDeviceConfiguration(), createOutputAudioDeviceConfiguration()]
         config.keyboards = [VZUSBKeyboardConfiguration()]
-        config.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
+        if self.config.useTrackpad {
+            config.pointingDevices = [VZMacTrackpadConfiguration()]
+        } else {
+            config.pointingDevices = [VZUSBScreenCoordinatePointingDeviceConfiguration()]
+        }
         config.consoleDevices = [createSpiceAgentConsoleDeviceConfiguration()]
         if directoryShares != "" {
             config.directorySharingDevices = createDirectoryShareConfiguration()
@@ -110,7 +113,7 @@ class LinuxVM: CommonVM {
         }
         let opts = VZVirtualMachineStartOptions()
         self.createVirtualMachine()
-        self.startVirtualMachine(captureSystemKeys: false, bootOpts: opts)
+        self.startVirtualMachine(captureSystemKeys: config.captureSystemKeys, autoResizeDisplay: config.autoResizeDisplay, bootOpts: opts)
     }
     
 }

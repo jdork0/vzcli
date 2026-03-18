@@ -1,3 +1,4 @@
+
 //
 // Copyright © 2023 Jason Kelly. All rights reserved.
 //
@@ -36,7 +37,10 @@ struct vzcli: ParsableCommand {
     @Option(help: "Disk size in GB.") var initDiskSize = UInt64(64)
     @Flag(help: "Generate a MAC Address to use with bridged networking.") var generateMac = false
     @Flag(help: "List available bridged networking interfaces.") var listBridges = false
-    @Argument(help: "Path to VM directory") var vmDir: String
+    @Flag(help: "Capture system keys (e.g. Cmd-Tab) in the VM window.") var captureSystemKeys = false
+    @Flag(help: "Automatically resize the guest display to match the window.") var autoResizeDisplay = false
+    @Flag(help: "Use trackpad instead of USB screen coordinate pointing device (macOS guests only).") var useTrackpad = false
+    @Argument(help: "Path to VM directory") var vmDir: String = ""
 
     func run() {
 
@@ -53,8 +57,13 @@ struct vzcli: ParsableCommand {
             return
         }
         
+        if vmDir.isEmpty {
+            print("Error: vmDir argument is required.")
+            return
+        }
+
         let app = NSApplication.shared
-                
+
         if headless || initMacos || initMacosIPSW != "" {
             // no window / dock icon
             app.setActivationPolicy(.prohibited)
@@ -64,21 +73,37 @@ struct vzcli: ParsableCommand {
 
         // launch a linux vm
         if initLinux != "" || FileManager.default.fileExists(atPath: vmDir + "/" + linuxMarker) {
-            let delegate = LinuxVM(vmname: name, cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initLinux, initDiskSize: initDiskSize)
+            let config = VMConfig(vmName: name, cpus: cpus, ramMB: UInt64(mem), headless: headless,
+                                  resolution: resolution, vmDir: vmDir, netConf: net,
+                                  directoryShares: virtiofs, initImg: initLinux, initDiskSizeGB: initDiskSize,
+                                  captureSystemKeys: captureSystemKeys, autoResizeDisplay: autoResizeDisplay,
+                                  useTrackpad: useTrackpad)
+            let delegate = LinuxVM(config: config)
             app.delegate = delegate
             app.run()
             return
         }
         // create a new macOS vm (headless)
         if initMacos || initMacosIPSW != "" {
-            let delegate = CreateMacVM(cpus: cpus, ram: UInt64(mem), headless: false, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize)
+            let config = VMConfig(cpus: cpus, ramMB: UInt64(mem), headless: false,
+                                  resolution: resolution, vmDir: vmDir, netConf: net,
+                                  directoryShares: virtiofs, initImg: initMacosIPSW, initDiskSizeGB: initDiskSize,
+                                  captureSystemKeys: captureSystemKeys, autoResizeDisplay: autoResizeDisplay,
+                                  useTrackpad: useTrackpad)
+            let delegate = CreateMacVM(config: config)
             app.delegate = delegate
             app.run()
             return
         }
         // launch an existing macOS vm
         if FileManager.default.fileExists(atPath: vmDir + "/" + macOSMarker) {
-            let delegate = MacVM(vmname: name, cpus: cpus, ram: UInt64(mem), headless: headless, resolution: resolution, vmdir: vmDir, netconf: net, sharing: virtiofs, initimg: initMacosIPSW, initDiskSize: initDiskSize, recovery: recovery)
+            let config = VMConfig(vmName: name, cpus: cpus, ramMB: UInt64(mem), headless: headless,
+                                  resolution: resolution, vmDir: vmDir, netConf: net,
+                                  directoryShares: virtiofs, initImg: initMacosIPSW,
+                                  initDiskSizeGB: initDiskSize, recovery: recovery,
+                                  captureSystemKeys: captureSystemKeys, autoResizeDisplay: autoResizeDisplay,
+                                  useTrackpad: useTrackpad)
+            let delegate = MacVM(config: config)
             app.delegate = delegate
             app.run()
             return
