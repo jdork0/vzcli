@@ -48,6 +48,8 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     var window: NSWindow
     var windowWidth: Int
     var windowHeight: Int
+    var sigintSource: DispatchSourceSignal?
+    var sigtermSource: DispatchSourceSignal?
 
 
     init(config: VMConfig) {
@@ -425,9 +427,45 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         return outputAudioDevice
     }
 
+    // request graceful VM shutdown via ACPI power button
+    @objc func shutdownVM() {
+        guard virtualMachine != nil else { exit(0) }
+        do {
+            try virtualMachine.requestStop()
+        } catch {
+            print("Failed to request VM stop: \(error.localizedDescription)")
+            exit(1)
+        }
+    }
+
+    // create a custom menu bar with a Shutdown item
+    func setupMenu() {
+        let mainMenu = NSMenu()
+
+        let appMenuItem = NSMenuItem()
+        mainMenu.addItem(appMenuItem)
+        let appMenu = NSMenu()
+        appMenu.addItem(withTitle: "Shutdown", action: #selector(shutdownVM), keyEquivalent: "q")
+        appMenu.addItem(NSMenuItem.separator())
+        appMenu.addItem(withTitle: "Force Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
+        appMenuItem.submenu = appMenu
+
+        NSApp.mainMenu = mainMenu
+    }
+
     // starts the virtual machine
     func startVirtualMachine(captureSystemKeys: Bool, autoResizeDisplay: Bool, bootOpts: VZVirtualMachineStartOptions)
     {
+        // install signal handlers for graceful shutdown
+        signal(SIGINT, SIG_IGN)
+        signal(SIGTERM, SIG_IGN)
+        sigintSource = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
+        sigtermSource = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+        sigintSource?.setEventHandler { [weak self] in self?.shutdownVM() }
+        sigtermSource?.setEventHandler { [weak self] in self?.shutdownVM() }
+        sigintSource?.resume()
+        sigtermSource?.resume()
+
         DispatchQueue.main.async {
             // display the window and connect to vm if not headless
             if self.enableUI {
@@ -450,6 +488,8 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
                 self.window.makeKeyAndOrderFront(nil)
                 // bring the window to front
                 NSApp.activate(ignoringOtherApps: true)
+                // set up custom menu with Shutdown item
+                self.setupMenu()
             }
             // handle delegate calls
             self.virtualMachine.delegate = self
@@ -466,9 +506,10 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
 
     }
     
-    // exit if window closed
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        return true
+    // graceful shutdown: request VM stop, defer app termination until guest stops
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        shutdownVM()
+        return .terminateLater
     }
 
     // virtual machine stopped with error
@@ -480,6 +521,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     // virtual machine stopped
     func guestDidStop(_ virtualMachine: VZVirtualMachine) {
         print("VM stopped.")
+        NSApp.reply(toApplicationShouldTerminate: true)
         exit(0)
     }
 
