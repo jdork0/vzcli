@@ -27,7 +27,7 @@ import Usernet
 var linuxMarker = ".linux"
 var macOSMarker = ".macos"
 
-class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
+class CommonVM: NSObject, NSApplicationDelegate, NSWindowDelegate, VZVirtualMachineDelegate {
 
     var config: VMConfig
     var vmDir: String
@@ -472,6 +472,7 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
                 // set the window and dock badge to the vm name
                 NSApp.dockTile.badgeLabel = self.vmName
                 self.window.title = self.vmName
+                self.window.delegate = self
                 // open a window with the GUI
                 self.window.orderFrontRegardless()
                 // get the view of virtualmachine
@@ -506,6 +507,12 @@ class CommonVM: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
 
     }
     
+    // graceful shutdown when the window X button is clicked
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        shutdownVM()
+        return false
+    }
+
     // graceful shutdown: request VM stop, defer app termination until guest stops
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         shutdownVM()
