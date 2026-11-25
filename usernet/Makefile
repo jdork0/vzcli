@@ -1,11 +1,15 @@
 XCFRAMEWORK = ../usernet.xcframework
 
-.PHONY: all deps build clean
+.PHONY: all deps update build clean
 
 all: build
 
 deps:
 	go install golang.org/x/mobile/cmd/gomobile@latest
+	go mod tidy
+
+update:
+	go get $$(go list -m -f '{{if not (or .Indirect .Main)}}{{.Path}}@latest{{end}}' all)
 	go mod tidy
 
 build: deps
